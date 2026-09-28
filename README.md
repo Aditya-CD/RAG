@@ -97,7 +97,15 @@ GROQ_API_KEY="your_groq_api_key_here"
 ### 1. Add Research Papers
 Drop your research papers (e.g. `attention_is_all_you_need.pdf`, `llama3_paper.pdf`) inside the `data/` folder.
 
-### 2. Run Interactive CLI
+### 2. Launch Streamlit Web Dashboard
+Launch the interactive web frontend with full pipeline inspection:
+
+```bash
+streamlit run streamlit_app.py
+```
+*(Or with uv: `uv run streamlit run streamlit_app.py`)*
+
+### 3. Run Interactive CLI
 Launch the terminal assistant for live multi-turn research questions:
 
 ```bash

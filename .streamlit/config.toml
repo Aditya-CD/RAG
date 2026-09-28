@@ -1,0 +1,7 @@
+[server]
+# Use polling for file watcher to prevent Streamlit from deep-inspecting lazy-loaded vision modules in transformers
+fileWatcherType = "poll"
+headless = false
+
+[client]
+toolbarMode = "minimal"
