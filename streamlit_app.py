@@ -254,6 +254,9 @@ with tab_query:
         if detailed:
             # Latency and Performance Metrics
             st.markdown("### ⏱️ Pipeline Execution Metrics")
+            retrieval_ms = detailed['retrieval_time'] * 1000
+            retrieval_val = f"{retrieval_ms:.1f}ms" if retrieval_ms >= 0.1 else "< 0.5ms"
+            
             m1, m2, m3, m4 = st.columns(4)
             with m1:
                 st.markdown(
@@ -267,7 +270,7 @@ with tab_query:
                 st.markdown(
                     f"""<div class="metric-container">
                         <div class="metric-label">FAISS Retrieval</div>
-                        <div class="metric-value">{detailed['retrieval_time'] * 1000:.1f}ms</div>
+                        <div class="metric-value">{retrieval_val}</div>
                     </div>""",
                     unsafe_allow_html=True,
                 )
@@ -291,16 +294,13 @@ with tab_query:
             # Synthesized Grounded Response
             st.markdown("---")
             st.markdown("### 💡 Grounded Synthesized Response")
-            st.markdown(
-                f"""
-                <div class="answer-box">
-                    <div style="font-size: 15px; color: #f8fafc; line-height: 1.6;">
-                        {detailed['answer']}
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            
+            # Format any raw token citations like 【1†L1-L8】 to clean readable [1]
+            import re
+            clean_answer = re.sub(r'【(\d+)[^】]*】', r'[\1]', detailed['answer'])
+
+            with st.container(border=True):
+                st.markdown(clean_answer)
 
             # References Cited
             if detailed["sources"]:
