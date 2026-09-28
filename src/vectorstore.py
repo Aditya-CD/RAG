@@ -3,7 +3,6 @@ import faiss
 import numpy as np
 import pickle
 from typing import List, Any
-from sentence_transformers import SentenceTransformer
 from src.embedding import EmbeddingPipeline
 
 
@@ -20,22 +19,28 @@ class FaissVectorStore:
         os.makedirs(self.persist_dir, exist_ok=True)
         self.index = None
         self.metadata = []
-        self.embedding_model = embedding_model
-        self.model = SentenceTransformer(embedding_model)
-        self.chunk_size = chunk_size
-        self.chunk_overlap = chunk_overlap
-        print(f"[INFO] Loaded embedding model: {embedding_model}")
+        self.embedding_pipeline = EmbeddingPipeline(
+            model_name=embedding_model,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+        )
 
     def build_from_documents(self, documents: List[Any]):
         print(f"[INFO] Building vector store from {len(documents)} raw documents...")
-        emb_pipe = EmbeddingPipeline(
-            model_name=self.embedding_model,
-            chunk_size=self.chunk_size,
-            chunk_overlap=self.chunk_overlap,
-        )
-        chunks = emb_pipe.chunk_documents(documents)
-        embeddings = emb_pipe.embed_chunks(chunks)
-        metadatas = [{"text": chunk.page_content} for chunk in chunks]
+        chunks = self.embedding_pipeline.chunk_documents(documents)
+        embeddings = self.embedding_pipeline.embed_chunks(chunks)
+
+        # Preserve source metadata and page numbering for citations
+        metadatas = []
+        for chunk in chunks:
+            chunk_meta = dict(chunk.metadata) if hasattr(chunk, "metadata") and chunk.metadata else {}
+            # Standardize page indexing to 1-based index if integer
+            page = chunk_meta.get("page")
+            if isinstance(page, int):
+                chunk_meta["page"] = page + 1
+            chunk_meta["text"] = chunk.page_content
+            metadatas.append(chunk_meta)
+
         self.add_embeddings(np.array(embeddings).astype("float32"), metadatas)
         self.save()
         print(f"[INFO] Vector store built and saved to {self.persist_dir}")
@@ -69,13 +74,15 @@ class FaissVectorStore:
         D, I = self.index.search(query_embedding, top_k)
         results = []
         for idx, dist in zip(I[0], D[0]):
+            if idx == -1:
+                continue
             meta = self.metadata[idx] if idx < len(self.metadata) else None
-            results.append({"index": idx, "distance": dist, "metadata": meta})
+            results.append({"index": idx, "distance": float(dist), "metadata": meta})
         return results
 
     def query(self, query_text: str, top_k: int = 5):
         print(f"[INFO] Querying vector store for: '{query_text}'")
-        query_emb = self.model.encode([query_text]).astype("float32")
+        query_emb = self.embedding_pipeline.embed_text(query_text)
         return self.search(query_emb, top_k=top_k)
 
 

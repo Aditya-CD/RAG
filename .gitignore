@@ -9,3 +9,7 @@ wheels/
 # Virtual environments
 .venv
 .env
+
+# Interview preparation notes (local only)
+INTERVIEW_PREP_GUIDE.*
+convert_guide_to_pdf.py

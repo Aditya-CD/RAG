@@ -35,12 +35,16 @@ class EmbeddingPipeline:
         print(f"[INFO] Embeddings shape: {embeddings.shape}")
         return embeddings
 
+    def embed_text(self, text: str) -> np.ndarray:
+        """Generate embedding vector for a single query text."""
+        return self.model.encode([text], convert_to_numpy=True).astype("float32")
+
 
 # Example usage
 if __name__ == "__main__":
-
     docs = load_all_documents("data")
     emb_pipe = EmbeddingPipeline()
     chunks = emb_pipe.chunk_documents(docs)
     embeddings = emb_pipe.embed_chunks(chunks)
     print("[INFO] Example embedding:", embeddings[0] if len(embeddings) > 0 else None)
+

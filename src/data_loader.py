@@ -89,7 +89,7 @@ def load_all_documents(data_dir: str) -> List[Any]:
     for json_file in json_files:
         print(f"[DEBUG] Loading JSON: {json_file}")
         try:
-            loader = JSONLoader(str(json_file))
+            loader = JSONLoader(file_path=str(json_file), jq_schema=".", text_content=False)
             loaded = loader.load()
             print(f"[DEBUG] Loaded {len(loaded)} JSON docs from {json_file}")
             documents.extend(loaded)
