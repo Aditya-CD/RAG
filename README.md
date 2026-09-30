@@ -49,6 +49,9 @@ RAG/
 │   └── search.py          # Groq LLM integration, citation formatting & prompt orchestration
 ├── app.py                 # Quick execution script for demonstration
 ├── main.py                # Full-featured interactive CLI for querying and re-indexing
+├── Dockerfile             # Multi-stage container definition (Python 3.12-slim)
+├── docker-compose.yml     # Compose service definition with volume mounts & env binding
+├── .dockerignore          # Build-context optimization exclusions
 ├── requirements.txt       # Project dependencies
 ├── .env.example           # Environment variables template
 └── README.md              # Project documentation
@@ -137,6 +140,72 @@ rag = RAGSearch(persist_dir="faiss_store")
 # Query the literature
 response = rag.search_and_summarize("What datasets were used for pre-training?", top_k=3)
 print(response)
+```
+
+---
+
+## 🐳 Docker Deployment
+
+The application is fully containerized with Docker and Docker Compose. Vector store indexes (`faiss_store/`) and papers (`data/`) are mounted via host volumes to ensure full data persistence across container lifecycles.
+
+### Prerequisites
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+- A configured `.env` file with `GROQ_API_KEY`.
+
+### Quick Start with Docker Compose (Recommended)
+
+1. **Build and start the application**:
+   ```bash
+   docker compose up --build
+   ```
+
+2. **Access the Web Dashboard**:
+   Open [http://localhost:8501](http://localhost:8501) in your browser.
+
+3. **Run in detached (background) mode**:
+   ```bash
+   docker compose up -d
+   ```
+
+4. **View live logs**:
+   ```bash
+   docker compose logs -f
+   ```
+
+5. **Stop the container**:
+   ```bash
+   docker compose down
+   ```
+
+### Running Interactive CLI via Docker
+
+You can also run the terminal-based Q&A or re-indexing commands directly inside the containerized environment:
+
+```bash
+# Rebuild index inside the container
+docker compose run --rm --entrypoint python rag-app main.py --reindex
+
+# Run interactive terminal Q&A
+docker compose run --rm --entrypoint python rag-app main.py
+
+# Direct one-off query
+docker compose run --rm --entrypoint python rag-app main.py --query "What is attention mechanism?"
+```
+
+### Manual Docker CLI (Without Compose)
+
+```bash
+# Build the image
+docker build -t rag-assistant:latest .
+
+# Run container with volume mounts and env file
+docker run -d \
+  --name rag-assistant \
+  -p 8501:8501 \
+  --env-file .env \
+  -v "${PWD}/data:/app/data" \
+  -v "${PWD}/faiss_store:/app/faiss_store" \
+  rag-assistant:latest
 ```
 
 ---

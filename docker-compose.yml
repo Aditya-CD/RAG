@@ -1,0 +1,13 @@
+services:
+  rag-app:
+    build: .
+    container_name: rag-assistant
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    volumes:
+      # Mount data and faiss_store so new papers & index files persist on your machine
+      - ./data:/app/data
+      - ./faiss_store:/app/faiss_store
+    restart: unless-stopped
